@@ -1,12 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 
-import {
-  type Body_login_login_access_token as AccessToken,
-  LoginService,
-  type UserPublic,
-  type UserRegister,
-  UsersService,
+import type {
+  Body_login_login_access_token as AccessToken,
+  UserPublic,
+  UserRegister,
 } from "@/client"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
@@ -20,15 +18,31 @@ const useAuth = () => {
   const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
 
+  // MOCK: Replace real API call with mock data
   const { data: user } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
-    queryFn: UsersService.readUserMe,
+    queryFn: async () => {
+      // Simulate API Loading
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      // Return dummy user
+      return {
+        id: "1",
+        email: "admin@example.com",
+        is_active: true,
+        is_superuser: true,
+        full_name: "Admin User",
+      } as UserPublic
+    },
     enabled: isLoggedIn(),
   })
 
   const signUpMutation = useMutation({
-    mutationFn: (data: UserRegister) =>
-      UsersService.registerUser({ requestBody: data }),
+    mutationFn: async (data: UserRegister) => {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      // Simulate success
+      console.log("Mock signup: ", data)
+      return { ...data, id: "new-user-id" }
+    },
     onSuccess: () => {
       navigate({ to: "/login" })
     },
@@ -38,11 +52,11 @@ const useAuth = () => {
     },
   })
 
-  const login = async (data: AccessToken) => {
-    const response = await LoginService.loginAccessToken({
-      formData: data,
-    })
-    localStorage.setItem("access_token", response.access_token)
+  const login = async (_data: AccessToken) => {
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    // Set fake token
+    localStorage.setItem("access_token", "fake-jwt-token")
   }
 
   const loginMutation = useMutation({
